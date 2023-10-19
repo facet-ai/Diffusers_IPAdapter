@@ -138,10 +138,13 @@ class IPAdapter:
             weight = weight.to(self.device)
             prompt_embeds = prompt_embeds * weight
 
-        if prompt_embeds.shape[0] > 1:
-            prompt_embeds = torch.cat(prompt_embeds.chunk(prompt_embeds.shape[0]), dim=1)
-        if negative_prompt_embeds.shape[0] > 1:
-            negative_prompt_embeds = torch.cat(negative_prompt_embeds.chunk(negative_prompt_embeds.shape[0]), dim=1)
+        num_samples = len(prompt) if isinstance(prompt, list) else 1
+
+        bs_embed, seq_len, _ = prompt_embeds.shape
+        prompt_embeds = prompt_embeds.repeat(1, num_samples, 1)
+        prompt_embeds = prompt_embeds.view(bs_embed * num_samples, seq_len, -1)
+        negative_prompt_embeds = negative_prompt_embeds.repeat(1, num_samples, 1)
+        negative_prompt_embeds = negative_prompt_embeds.view(bs_embed * num_samples, seq_len, -1)
 
         text_embeds = (None, None, None, None)
         if prompt is not None:
